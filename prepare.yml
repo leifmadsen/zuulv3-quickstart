@@ -1,0 +1,31 @@
+# vim: set ft=ansible
+
+- hosts: zuul
+  become: true
+  become_user: root
+  gather_facts: False
+  tasks:
+    - wait_for_connection:
+        timeout: 900
+
+    - name: Environment update
+      command: >
+        dnf update -y
+      register: environment_update
+
+    - name: Reboot if environment was updated
+      block:
+        - shell: hostname # sleep 2 && shutdown -r now "Ansible triggered reboot"
+          async: yes
+          poll: 0
+          ignore_errors: True
+
+        - debug: var=ansible_ssh_host
+
+        - wait_for_connection:
+            timeout: 900
+
+      when: environment_update.changed
+
+    - debug:
+        msg: "We're back against. Running on {{ inventory_hostname }}"

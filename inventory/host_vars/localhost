@@ -1,0 +1,2 @@
+instance_list:
+  - { name: zuulv3, group: zuul, security_groups: "default" }

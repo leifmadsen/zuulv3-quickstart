@@ -1,0 +1,4 @@
+# vim: ft=ansible
+
+- import_playbook: openstack.yml
+- import_playbook: prepare.yml
