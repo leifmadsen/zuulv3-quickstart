@@ -1,0 +1,30 @@
+# vim: ft=ansible tabstop=2 shiftwidth=2 expandtab
+---
+- name: Install Zookeeper packages
+  package:
+    name: "{{ item }}"
+    state: present
+  with_items:
+    - zookeeper
+
+- name: Zookeeper configuration
+  template:
+    src: zoo.cfg.j2
+    dest: /etc/zookeeper/zoo.cfg
+    owner: root
+    group: root
+    mode: 0644
+
+- name: Zookeeper server ID
+  template:
+    src: myid.j2
+    dest: /etc/zookeeper/myid
+    owner: root
+    group: root
+    mode: 0644
+
+- name: Start Zookeeper
+  systemd:
+    name: zookeeper
+    state: started
+    enabled: yes

@@ -1,4 +1,11 @@
-# vim: ft=ansible
-
+# vim: ft=ansible tabstop=2 shiftwidth=2 expandtab
+---
 - import_playbook: openstack.yml
 - import_playbook: prepare.yml
+
+- hosts: zuul
+  become: True
+  become_user: root
+  tasks: []
+  roles:
+    - { role: zookeeper }

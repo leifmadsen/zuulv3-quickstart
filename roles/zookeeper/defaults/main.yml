@@ -1,0 +1,5 @@
+---
+zk_tick_time: 2000
+zk_data_dir: /var/lib/zookeeper
+zk_client_port: 2181
+zk_myid: 1
