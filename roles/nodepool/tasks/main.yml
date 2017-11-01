@@ -39,7 +39,7 @@
         depth: 1
 
     - name: FIXME Cherry pick 'Fix broken use of pre-existing cloud images'
-      command: git fetch https://git.openstack.org/openstack-infra/nodepool refs/changes/50/498050/6
+      command: git fetch https://git.openstack.org/openstack-infra/nodepool refs/changes/50/498050/1
       args:
         chdir: "{{ ansible_env.HOME }}/nodepool"
 
@@ -133,3 +133,13 @@
   with_items:
     - debug.log
     - nodepool.log
+
+- name: Create nodepool pid directory
+  become: true
+  become_user: root
+  file:
+    path: /var/run/nodepool
+    owner: root
+    group: root
+    mode: 0755
+    state: directory
