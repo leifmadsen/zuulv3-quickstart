@@ -1,4 +1,4 @@
-# vim: ft=ansible tabstop=2 shiftwidth=2 expandtab
+# vim: tabstop=2 shiftwidth=2 expandtab
 ---
 - name: Create OpenStack configuration directory
   become: true
@@ -24,24 +24,112 @@
   pip:
     name: bindep
 
-- name: Clone Nodepool
-  git:
-    repo: https://git.openstack.org/openstack-infra/nodepool
-    dest: "{{ ansible_env.HOME}}/nodepool"
-    version: feature/zuulv3
-    depth: 1
+- name: Check if Nodepool is installed
+  stat:
+    path: /usr/bin/nodepool
+  register: nodepool_install_status
 
-- name: Get dependencies to install
-  command: bindep -b
-  args:
-    chdir: "{{ ansible_env.HOME }}/nodepool"
-  register: nodepool_deps
-  ignore_errors: true
+- name: Install Nodepool
+  block:
+    - name: Clone Nodepool
+      git:
+        repo: https://git.openstack.org/openstack-infra/nodepool
+        dest: "{{ ansible_env.HOME}}/nodepool"
+        version: feature/zuulv3
+        depth: 1
 
-- name: Install nodepool dependencies
+    - name: FIXME Cherry pick 'Fix broken use of pre-existing cloud images'
+      command: git fetch https://git.openstack.org/openstack-infra/nodepool refs/changes/50/498050/6
+      args:
+        chdir: "{{ ansible_env.HOME }}/nodepool"
+
+    - name: FIXME Checkout cherry pick reference
+      command: git checkout FETCH_HEAD
+      args:
+        chdir: "{{ ansible_env.HOME }}/nodepool"
+
+    - name: Get dependencies to install
+      command: bindep -b
+      args:
+        chdir: "{{ ansible_env.HOME }}/nodepool"
+      register: nodepool_deps
+      ignore_errors: true
+
+    - name: Install nodepool dependencies
+      become: true
+      become_user: root
+      package:
+        name: "{{ item }}"
+        state: present
+      with_items: "{{ nodepool_deps.stdout_lines }}"
+
+    - name: Install nodepool
+      become: true
+      become_user: root
+      command: pip install .
+      args:
+        chdir: "{{ ansible_env.HOME }}/nodepool"
+  when: not nodepool_install_status.stat.exists
+
+- name: Create nodepool configuration directory
   become: true
   become_user: root
-  package:
-    name: "{{ item }}"
-    state: present
-  with_items: "{{ nodepool_deps.stdout_lines }}"
+  file:
+    path: /etc/nodepool
+    state: directory
+    owner: root
+    group: root
+    mode: 0755
+
+- name: Create nodepool configuration
+  become: true
+  become_user: root
+  template:
+    src: nodepool.yaml.j2
+    dest: /etc/nodepool/nodepool.yaml
+    owner: root
+    group: root
+    mode: 0644
+
+- name: Create nodepool logging configuration
+  become: true
+  become_user: root
+  copy:
+    src: logging.conf
+    dest: /etc/nodepool/logging.conf
+    owner: root
+    group: root
+    mode: 0644
+
+- name: Create nodepool secure configuration file
+  become: true
+  become_user: root
+  file:
+    path: /etc/nodepool/secure.conf
+    state: touch
+    owner: root
+    group: root
+    mode: 0644
+
+- name: Create nodepool logging directory
+  become: true
+  become_user: root
+  file:
+    path: /var/log/nodepool
+    state: directory
+    owner: root
+    group: adm
+    mode: 0775
+
+- name: Create nodepool log files
+  become: true
+  become_user: root
+  file:
+    path: /var/log/nodepool/{{ item }}
+    owner: root
+    group: adm
+    mode: 0664
+    state: touch
+  with_items:
+    - debug.log
+    - nodepool.log

@@ -14,3 +14,10 @@
   tasks: []
   roles:
     - { role: nodepool }
+
+- hosts: zuul
+  become: True
+  become_user: root
+  tasks: []
+  roles:
+    - { role: gearmand }

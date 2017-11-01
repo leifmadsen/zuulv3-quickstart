@@ -1,0 +1,12 @@
+---
+zk_host: 127.0.0.1
+nodepool_provider: myprovider
+nodepool_cloud_name: mycloud
+nodepool_cloudimage_name: centos-7
+nodepool_cloudimage_image_name: CentOS-7-x86_64-GenericCloud-1706
+nodepool_pool_name: main
+nodepool_pool_max_servers: 4
+nodepool_pool_label_name: centos-7-small
+nodepool_pool_label_flavor_name: m1.small
+nodepool_label_min_ready: 2
+

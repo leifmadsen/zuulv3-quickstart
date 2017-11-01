@@ -1,0 +1,12 @@
+---
+- name: Install gearmand
+  package:
+    name: gearmand
+    state: present
+
+- name: Start and enable gearmand service
+  systemd:
+    name: gearmand.service
+    enabled: yes
+    state: started
+

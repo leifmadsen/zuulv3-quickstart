@@ -28,3 +28,7 @@
     name: zookeeper
     state: started
     enabled: yes
+
+- name: Set Zookeeper port fact for Nodepool setup
+  set_fact:
+    zk_client_port: "{{ zk_client_port }}"

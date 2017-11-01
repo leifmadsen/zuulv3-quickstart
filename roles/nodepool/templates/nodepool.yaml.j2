@@ -1,0 +1,24 @@
+zookeeper-servers:
+  - host: {{ zk_host }}
+    port: {{ zk_client_port }}
+
+providers:
+
+  - name: myprovider # this is a nodepool identifier for this cloud provider (cloud+region combo)
+    region-name: {{ nodepool_os_region_name }}  # this needs to match the region name in clouds.yaml but is only needed if there is more than one region
+    cloud: {{ nodepool_cloud_name }}  # This needs to match the name in clouds.yaml
+    cloud-images:
+      - name: {{ nodepool_cloudimage_name }}   # Defines a cloud-image for nodepool
+        image-name: {{ nodepool_cloudimage_image_name }}  # name of image from cloud
+    pools:
+      - name: {{ nodepool_pool_name }}
+        max-servers: {{ nodepool_pool_max_servers }}  # quota - nodepool will never create more than this many
+        labels:
+          - name: {{ nodepool_pool_label_name }}  # defines label that will be used to get one of these in a job
+            flavor-name: '{{ nodepool_pool_label_flavor_name }}'  # name of flavor from cloud
+            cloud-image: {{ nodepool_cloudimage_name }}  # matches name from cloud-images
+
+labels:
+
+  - name: {{ nodepool_pool_label_name }} # defines label that will be used in jobs
+    min-ready: {{ nodepool_label_min_ready }}  # nodepool will always keep this many booted and ready to go
