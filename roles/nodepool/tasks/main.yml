@@ -1,0 +1,47 @@
+# vim: ft=ansible tabstop=2 shiftwidth=2 expandtab
+---
+- name: Create OpenStack configuration directory
+  become: true
+  become_user: root
+  file:
+    path: /etc/openstack
+    state: directory
+    mode: 0755
+
+- name: Install cloud.yaml
+  become: true
+  become_user: root
+  template:
+    src: clouds.yaml.j2
+    dest: /etc/openstack/clouds.yaml
+    owner: root
+    group: root
+    mode: 0644
+
+- name: Install bindep via pip
+  become: true
+  become_user: root
+  pip:
+    name: bindep
+
+- name: Clone Nodepool
+  git:
+    repo: https://git.openstack.org/openstack-infra/nodepool
+    dest: "{{ ansible_env.HOME}}/nodepool"
+    version: feature/zuulv3
+    depth: 1
+
+- name: Get dependencies to install
+  command: bindep -b
+  args:
+    chdir: "{{ ansible_env.HOME }}/nodepool"
+  register: nodepool_deps
+  ignore_errors: true
+
+- name: Install nodepool dependencies
+  become: true
+  become_user: root
+  package:
+    name: "{{ item }}"
+    state: present
+  with_items: "{{ nodepool_deps.stdout_lines }}"
