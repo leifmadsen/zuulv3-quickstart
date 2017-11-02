@@ -63,6 +63,16 @@
         state: present
       with_items: "{{ nodepool_deps.stdout_lines }}"
 
+    - name: Install nodepool compiling dependencies
+      become: true
+      become_user: root
+      package:
+        name: "{{ item }}"
+        state: present
+      with_items:
+        - gmp-devel
+        - redhat-rpm-config
+
     - name: Install nodepool
       become: true
       become_user: root
@@ -143,3 +153,19 @@
     group: root
     mode: 0755
     state: directory
+
+- name: Get status of nodepool.pid file
+  stat:
+    path: /var/run/nodepool/nodepool.pid
+  register: nodepool_pid_stat
+
+- name: Check status of nodepool-launcher
+  shell: 'ps --format state= --pid $(cat /var/run/nodepool/nodepool.pid)'
+  when: nodepool_pid_stat.stat.exists
+  register: nodepool_status
+
+- name: Start nodepool-launcher if not started
+  become: true
+  become_user: root
+  command: /usr/bin/nodepool-launcher -c /etc/nodepool/nodepool.yaml -s /etc/nodepool/secure.conf -l /etc/nodepool/logging.conf
+  when: not nodepool_pid_stat.stat.exists or not nodepool_status.stdout == "S" | default("omit")
